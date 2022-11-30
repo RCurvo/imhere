@@ -1,44 +1,72 @@
-import { Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { Text, View, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { styles } from './styles';
 import { Participant } from '../../components/Participant';
-
-export default function Home(){
-    const participants = ['Renan', 'Vini', 'Diego', 'Caio', "Beta", "Carla", "Mari", "Ju", "Felipe", "Flávia"]
-
-function handleParticipantAdd(){
-    console.log("tóis")
-}
-
-function handleParticipantRemove(name:string){
-    console.log(`tóis ----- ${name}`)
-}
+import { useState } from 'react';
 
 
-  return (
-    <View style={styles.container}>
-        <Text style={styles.eventName}>
-            Nome do Evento
-        </Text>
-        <Text style={styles.eventDate}>
-            Sexta, 4 de Novembro de 2022
-        </Text>
-        <View style={styles.form}>
-        <TextInput 
-        style={styles.input}
-        placeholder="Nome do participante"
-        placeholderTextColor="#6b6b6b"
-        />
-        <TouchableOpacity style={styles.button} onPress={handleParticipantAdd}>
-            <Text style={styles.buttonText}>+</Text>
-        </TouchableOpacity>
+export default function Home() {
+    const [participants, setParticipants] = useState<string[]>([])
+    const [participantName, setParticipantName] = useState('')
+
+    function handleParticipantAdd() {
+        if (participants.includes(participantName)) {
+            return Alert.alert("Participante existe", "Já existe um participante na lista com esse nome")
+        }
+        setParticipants(prevState => [...prevState, participantName])
+        setParticipantName('')
+    }
+
+    function handleParticipantRemove(name: string) {
+        function deleteItem(item: string) {
+            let filterdList = participants.filter(participant => participant !== item)
+            setParticipants(filterdList)
+        }
+        Alert.alert("Remover", `Deseja Remover o participante ${name}?`, [
+            {
+                text: 'Remover',
+                onPress: () => deleteItem(name)
+            },
+            {
+                text: 'Cancelar',
+                style: 'cancel'
+            },
+        ])
+    }
+
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.eventName}>
+                Nome do Evento
+            </Text>
+            <Text style={styles.eventDate}>
+                Sexta, 4 de Novembro de 2022
+            </Text>
+            <View style={styles.form}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Nome do participante"
+                    placeholderTextColor="#6b6b6b"
+                    onChangeText={setParticipantName}
+                    value={participantName}
+                />
+                <TouchableOpacity style={styles.button} onPress={handleParticipantAdd}>
+                    <Text style={styles.buttonText}>+</Text>
+                </TouchableOpacity>
+            </View>
+            <FlatList
+                data={participants}
+                showsVerticalScrollIndicator={false}
+                keyExtractor={item => item}
+                renderItem={({ item }) => (
+                    <Participant key={item} name={item} onRemove={() => handleParticipantRemove(item)} />
+                )}
+                ListEmptyComponent={() => (
+                    <Text style={styles.emptyListText}>
+                        Ninguém chegou no evento ainda? Adicione participantes a sua lista de presença.
+                    </Text>
+                )}
+            />
         </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
-        {participants.map((participant)=>{
-return(
-    <Participant key={participant} name={participant} onRemove={()=> handleParticipantRemove(participant)}/>
-)
-})}
-</ScrollView>
-    </View>
-  )
+    )
 }
